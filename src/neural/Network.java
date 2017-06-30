@@ -251,13 +251,13 @@ public class Network
   @Override
   public String toString()
   {
-    String result = "";
+    StringBuilder result = new StringBuilder();
     
     //Just every layer one after another
     for(int i=0; i<layers.length; i++)
-      result += layers[i].toString();
+      result.append(layers[i].toString());
     
-    return result;
+    return result.toString();
   }
   
   
