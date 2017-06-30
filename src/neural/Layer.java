@@ -220,7 +220,7 @@ public class Layer
   public String toString()
   {
     //Construct a beautiful string!
-    String result = "";
+    StringBuilder result = new StringBuilder();
     
     //All the weights
     //Every column shows all the weights for one input
@@ -228,8 +228,8 @@ public class Layer
     for(int j=0; j<output_n; j++)
     {
       for(int i=0; i<input_n; i++)
-        result += String.format("| %.5f ", weights[i][j]);
-      result += "|\n";
+        result.append(String.format("| %.5f ", weights[i][j]));
+      result.append("|\n");
     }
     
     //Draw an o for every output with an "/ \" above, if there are more outputs
@@ -238,22 +238,22 @@ public class Layer
     for(int i=0; i<output_n; i++)
     {
       if(output_n < input_n)
-        result += "    \\ /   ";
+        result.append("    \\ /   ");
       else
         if(output_n > input_n)
-          result += "    / \\   ";
+          result.append("    / \\   ");
         else
-          result += "     |    ";
+          result.append("     |    ");
     }
-    result += "\n";
+    result.append("\n");
     
     for(int i=0; i<output_n; i++)
-      result += "     o    ";
-    result += "\n";
+      result.append("     o    ");
+    result.append("\n");
     
     
     //Return out beautiful string!
-    return result;
+    return result.toString();
   }
   
   
