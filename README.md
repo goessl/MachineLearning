@@ -80,7 +80,7 @@ In every Java class should be a main method that shows how to use this specific 
 
 ## Contributors
 
-The two people who inspired me to try making my own machine learning project are Stephen Welch and Brandon Rohrer.
+The two people who inspired me to try making my own machine learning project are Brandon Rohrer and Stephen Welch.
 Both make awesome YouTube videos that explain how machine learning works.
 
 Brandon Rohrer:
