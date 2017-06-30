@@ -83,15 +83,15 @@ In every Java class should be a main method that shows how to use this specific 
 The two people who inspired me to try making my own machine learning project are Stephen Welch and Brandon Rohrer.
 Both make awesome YouTube videos that explain how machine learning works.
 
-Stephen Welch:
-- YouTube: https://www.youtube.com/user/Taylorns34
-- Homepage: http://www.welchlabs.com/
-- GitHub: https://github.com/stephencwelch
-
 Brandon Rohrer:
 - YouTube https://www.youtube.com/channel/UCsBKTrp45lTfHa_p49I2AEQ
 - Blog: https://brohrer.github.io/blog.html
 - GitHub: https://github.com/brohrer
+
+Stephen Welch:
+- YouTube: https://www.youtube.com/user/Taylorns34
+- Homepage: http://www.welchlabs.com/
+- GitHub: https://github.com/stephencwelch
 
 ## License (MIT)
 
