@@ -18,9 +18,9 @@ public class Layer
   /** Sigmoid / Logistic function. Output between 0 and 1 **/
   public static final int ACTIVATION_SIGMOID = 2;
   /** Step function. Everything smaller than 0 becomes -1, everything else 1 **/
-  public static final int ACTIVATION_HEAVYSIDE_STEP_FUNCTION_N1_1 = 3;
+  public static final int ACTIVATION_HEAVISIDE_STEP_FUNCTION_N1_1 = 3;
   /** Step function. Everything smaller than 0 becomes 0, everything else 1 **/
-  public static final int ACTIVATION_HEAVYSIDE_STEP_FUNCTION_0_1 = 4;
+  public static final int ACTIVATION_HEAVISIDE_STEP_FUNCTION_0_1 = 4;
   /** Rectified Linear Unit (ReLU). Everything below 0 becomes 0 **/
   public static final int ACTIVATION_RECTIFIED_LINEAR_UNIT = 5;
   
@@ -118,7 +118,7 @@ public class Layer
           break;
         
         //Step function. Everything smaller than 0 becomes -1, everything else 1
-        case ACTIVATION_HEAVYSIDE_STEP_FUNCTION_N1_1:
+        case ACTIVATION_HEAVISIDE_STEP_FUNCTION_N1_1:
           if(output[i] >= 0)
             output[i] = 1;
           else
@@ -126,7 +126,7 @@ public class Layer
           break;
         
         //Step function. Everything smaller than 0 becomes 0, everything else 1
-        case ACTIVATION_HEAVYSIDE_STEP_FUNCTION_0_1:
+        case ACTIVATION_HEAVISIDE_STEP_FUNCTION_0_1:
           if(output[i] >= 0)
             output[i] = 1;
           else
