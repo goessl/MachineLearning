@@ -238,7 +238,7 @@ public class Layer
     for(int i=0; i<output_n; i++)
     {
       if(output_n < input_n)
-        result.aoppend("    \\ /   ");
+        result.append("    \\ /   ");
       else
         if(output_n > input_n)
           result.append("    / \\   ");
