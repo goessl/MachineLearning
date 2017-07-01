@@ -11,49 +11,51 @@ import java.util.Arrays;
 public class Layer
 {
   //Activation functions
-  /** None. Just outputs the sum of all inputs **/
+
+  /** None. Just outputs the sum of all inputs */
   public static final int ACTIVATION_NONE = 0;
-  /** Hyperbolic tangent. Output between -1 and 1 **/
+  /** Hyperbolic tangent. Output between -1 and 1 */
   public static final int ACTIVATION_TANH = 1;
-  /** Sigmoid / Logistic function. Output between 0 and 1 **/
+  /** Sigmoid / Logistic function. Output between 0 and 1 */
   public static final int ACTIVATION_SIGMOID = 2;
-  /** Step function. Everything smaller than 0 becomes -1, everything else 1 **/
+  /** Step function. Everything smaller than 0 becomes -1, everything else 1 */
   public static final int ACTIVATION_HEAVISIDE_STEP_FUNCTION_N1_1 = 3;
-  /** Step function. Everything smaller than 0 becomes 0, everything else 1 **/
+  /** Step function. Everything smaller than 0 becomes 0, everything else 1 */
   public static final int ACTIVATION_HEAVISIDE_STEP_FUNCTION_0_1 = 4;
-  /** Rectified Linear Unit (ReLU). Everything below 0 becomes 0 **/
+  /** Rectified Linear Unit (ReLU). Everything below 0 becomes 0 */
   public static final int ACTIVATION_RECTIFIED_LINEAR_UNIT = 5;
   
   //Some numbers to define the size
-  /** Number of inputs. **/
-  private final int input_n;
-  /** Number of outputs. **/
-  private final int output_n;
-  /** Weights. Every input gets an array of weights. One for every output **/
+
+  // Number of inputs.
+  private final int numberOfInputs;
+  // Number of outputs.
+  private final int numberOfOutputs;
+  // Weights. Every input gets an array of weights. One for every output
   private double[][] weights;
-  /** Activation function. Applied in every neuron on the sum of the weighted inputs **/
+  // Activation function. Applied in every neuron on the sum of the weighted inputs
   private final int activationFunction;
-  
-  
-  
+
   /**
    * Constructs a new Layer
-   * @param input_n Number of inputs
-   * @param output_n Number of outputs
+   *
+   * @param numberOfInputs Number of inputs
+   * @param numberOfOutputs Number of outputs
    * @param activationFunction Activation function to apply in every neuron
+   *
    * @throws Exception If number of input or output neurons doesn't fit
    */
-  public Layer(int input_n, int output_n,
-          int activationFunction) throws Exception
+  public Layer(int numberOfInputs, int numberOfOutputs,
+               int activationFunction) throws Exception
   {
-    if(input_n <= 0)
+    if(numberOfInputs <= 0)
       throw new Exception("Number of inputs must be 1 or more!");
-    if(output_n <= 0)
+    if(numberOfOutputs <= 0)
       throw new Exception("Number of outputs must be 1 or more!");
     
     
-    this.input_n = input_n;
-    this.output_n = output_n;
+    this.numberOfInputs = numberOfInputs;
+    this.numberOfOutputs = numberOfOutputs;
     this.activationFunction = activationFunction;
     
     //Every input has an array of weights, one for every output
@@ -73,7 +75,7 @@ public class Layer
     //  In conclusion: weights[In][Zn]
     //  In: Input n, Zn: Neuron n
     //
-    weights = new double[input_n][output_n];
+    weights = new double[numberOfInputs][numberOfOutputs];
   }
   
   
@@ -85,11 +87,11 @@ public class Layer
    */
   public double[] calculate(double[] input) throws Exception
   {
-    if(input.length != input_n)
+    if(input.length != numberOfInputs)
       throw new Exception("Number of inputs doesn't fit!");
     
     
-    double[] output = new double[output_n];
+    double[] output = new double[numberOfOutputs];
     
     //Sum all weighted inputs for every output neuron
     //For every output ...
@@ -192,17 +194,17 @@ public class Layer
   /**
    * @return Number of inputs
    */
-  public int getInput_n()
+  public int getNumberOfInputs()
   {
-    return input_n;
+    return numberOfInputs;
   }
   
   /**
    * @return Number of outputs
    */
-  public int getOutput_n()
+  public int getNumberOfOutputs()
   {
-    return output_n;
+    return numberOfOutputs;
   }
   
   /**
@@ -225,9 +227,9 @@ public class Layer
     //All the weights
     //Every column shows all the weights for one input
     //Every row show all the weights for one output
-    for(int j=0; j<output_n; j++)
+    for(int j = 0; j< numberOfOutputs; j++)
     {
-      for(int i=0; i<input_n; i++)
+      for(int i = 0; i< numberOfInputs; i++)
         result.append(String.format("| %.5f ", weights[i][j]));
       result.append("|\n");
     }
@@ -235,28 +237,25 @@ public class Layer
     //Draw an o for every output with an "/ \" above, if there are more outputs
     //than inputs (layer gets bigger),
     //or an "\ /" if it gets smaller or "|" if the size stays the same
-    for(int i=0; i<output_n; i++)
+    for(int i = 0; i< numberOfOutputs; i++)
     {
-      if(output_n < input_n)
+      if(numberOfOutputs < numberOfInputs)
         result.append("    \\ /   ");
       else
-        if(output_n > input_n)
+        if(numberOfOutputs > numberOfInputs)
           result.append("    / \\   ");
         else
           result.append("     |    ");
     }
     result.append("\n");
     
-    for(int i=0; i<output_n; i++)
+    for(int i = 0; i< numberOfOutputs; i++)
       result.append("     o    ");
     result.append("\n");
-    
     
     //Return out beautiful string!
     return result.toString();
   }
-  
-  
   
   //Test everything!
   public static void main(String[] args) throws Exception

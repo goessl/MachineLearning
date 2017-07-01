@@ -7,7 +7,7 @@ Java collection that provides Java packages for developing a machine learning al
 
 ## Code Example
 
-### [Neural Network](src/neural)
+### [Neural Network](src/main/java/neural)
 
 If you have some test data consisting of inputs and outputs.
 (Be sure that your data is normalized if needed!)
