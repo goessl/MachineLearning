@@ -6,25 +6,25 @@ import java.util.Arrays;
  * Neural network
  * 
  * @author Sebastian Gössl
- * @version 0.9 28.06.2017
+ * @version 0.91 16.07.2017
  */
 public class Network
 {
-  /** Layers. All the Layers in the Network **/
+  //Layers. All the Layers in the Network
   private final Layer[] layers;
   
   
   
   /**
-   * Constructor a new neural network
-   * @param input_n The number of input neurons
+   * Constructs a new neural network
+   * @param numberOfInputs The number of inputs
    * @param layerSizes An array with the number of neurons for every layer.
    * The last number of neurons are the output neurons
    * @param activationFunctions An array with the activation functions
    * for every layer
    * @throws Exception 
    */
-  public Network(int input_n, int[] layerSizes,
+  public Network(int numberOfInputs, int[] layerSizes,
           int[] activationFunctions) throws Exception
   {
     if(layerSizes.length <= 0)
@@ -37,15 +37,19 @@ public class Network
     //Declare the layers ...
     layers = new Layer[layerSizes.length];
     
+    
     //... and initialize them so
     //that every layer has as many neurons as it should have,
     //and as many inputs as the previous layer has neurons
+    
     //First layer
-    layers[0] = new Layer(input_n, layerSizes[0], activationFunctions[0]);
+    layers[0] = new Layer(numberOfInputs, layerSizes[0],
+            activationFunctions[0]);
     //Hidden layers + output layer
-    for(int i=1; i<layerSizes.length; i++)
+    for(int i=1; i<layerSizes.length; i++) {
       layers[i] = new Layer(layerSizes[i-1], layerSizes[i],
               activationFunctions[i]);
+    }
   }
   
   
@@ -61,8 +65,10 @@ public class Network
     double[] temp  = input;
     
     //... and feed it into a layer and feed  the output into the next layer
-    for (Layer layer : layers)
+    for (Layer layer : layers) {
       temp = layer.calculate(temp);
+    }
+    
     
     return temp;
   }
@@ -70,15 +76,17 @@ public class Network
   /**
    * Trains the network with the given input and output
    * @param loops How often it tests all the data sets
-   * @param step How much the weights are adjusted after every test
+   * @param epsilon The difference of the weight to measure
+   *                        the gradient of the error
+   * @param learningRate The leaning rate that gets applied to the weights
    * @param weightMinimum The minimum value a weight can have
    * @param weightMaximum The maximum value a weight can have
-   * @param input The given training inputs
-   * @param output The given training output
+   * @param input The given training input sets
+   * @param output The given training output sets
    * @return Documentation of the costs. Only for graphical/debbug purpose
    * @throws Exception If the input & output sizes don't match
    */
-  public double[] train(int loops, double step,
+  public double[] train(int loops, double epsilon, double learningRate, 
           double weightMinimum, double weightMaximum,
           double[][] input, double[][] output) throws Exception
   {
@@ -86,75 +94,69 @@ public class Network
       throw new Exception
         ("Number of inputs must equal the number of given outputs!");
     
+    
+    //Documentation of the costs for debugging and visualisation purposes
     double[] costs = new double[loops];
     
-    //Adjust the network many times
-    for(int k=0; k<loops; k++)
-    {
-      //Adjust every layer
-      for(Layer layer : layers)
-      {
-        //Save the weights of the current layer
+    //Go through the whole network many times
+    for(int k=0; k<loops; k++) {
+      //For every layer ...
+      for(Layer layer : layers) {
+        // ... save the weights
         double[][] weights = layer.getWeights();
         
         //Adjust every weight ...
-        for(int j=0; j<weights.length; j++)
-          for(int i=0; i<weights[j].length; i++)
-          {
-            //Calculate the costs
-            //Costs with the current weights
-            double cost_without_change = cost(input, output);
+        for(int j=0; j<weights.length; j++) {
+          for(int i=0; i<weights[j].length; i++) {
             
-            //Costs after increasing the weight
-            weights[j][i] += step;
+            double cost_before_change = cost(input, output);
+            
+            
+            //Calculate the change of the cost after the change of the weight
+            weights[j][i] += epsilon;
             layer.setWeights(weights);
-            double cost_with_increased_weight = cost(input, output);
-            weights[j][i] -= step;
+            double cost1 = cost(input, output);
             
-            //Costs after decreasing the weight
-            weights[j][i] -= step;
+            weights[j][i] -= 2*epsilon;
             layer.setWeights(weights);
-            double cost_with_decreased_weight = cost(input, output);
-            weights[j][i] += step;
+            double cost2 = cost(input, output);
+            weights[j][i] += epsilon;
             
             
-            //Compare the costs
-            //Costs with decreased weight are the smallest
-            if(cost_with_decreased_weight < cost_without_change &&
-                    cost_with_decreased_weight < cost_with_increased_weight)
-            {
-              weights[j][i] -= step;
-              if(weights[j][i] < weightMinimum)
-                weights[j][i] = weightMinimum;
-            }
-            else
-            {
-              //Costs with increased weight are the smallest
-              if(cost_with_increased_weight < cost_without_change)
-              {
-                weights[j][i] += step;
-                if(weights[j][i] > weightMaximum)
-                  weights[j][i] = weightMaximum;
-              }
-              //Otherwise no change is optimal
+            //Apply changes to the weight so that the costs decrease
+            double gradient = (cost1 - cost2) / (2 * epsilon);
+            weights[j][i] += - gradient * learningRate;
+            
+            //Keep the weight in the bounds
+            if(weights[j][i] < weightMinimum) {
+              weights[j][i] = weightMinimum;
+            } else if(weights[j][i] > weightMaximum) {
+                weights[j][i] = weightMaximum;
             }
             
             
             //Update the layer
             layer.setWeights(weights);
-
-          }//Weights
+            
+            
+//            //For debugging: Check if cost increased
+//            if(cost(input, output) > 2*cost_before_change)
+//              throw new Exception("Cost increased more than 200%!");
+            
+          }
+        }//Weights
       }//Layers
       
       costs[k] = cost(input, output);
-      //For debugging output progress
-      System.out.println(100.0*k/loops + "%: " + costs[k]);
+//      //For debugging: output the progress
+//      System.out.println(100.0*k/loops + "%: " + costs[k]);
       
     }//Loops
     
     
     return costs;
   }
+  
   
   /**
    * Caluclates the costs with the given test inputs and outputs.
@@ -173,21 +175,23 @@ public class Network
     double cost = 0;
     
     //Sum the costs for every data set
-    for(int j=0; j<input.length; j++)
-    {
+    for(int j=0; j<input.length; j++) {
       //Calculate the actual result
       double[] result = calculate(input[j]);
       double error = 0;
+      
       //And compare every actual output with the wanted output
-      for(int i=0; i<result.length; i++)
+      for(int i=0; i<result.length; i++) {
         error += (output[j][i] - result[i]) * (output[j][i] - result[i]);
-      cost += error*error;
+      }
+      cost += error;
     }
     
     cost *= 0.5;
     
     return cost;
   }
+  
   
   /**
    * Initalizes all weights of all layers with numbers between -1 and 1
@@ -197,8 +201,9 @@ public class Network
   public void seedWeights(double minimum, double maximum)
   {
     //Seed the weights of every layer
-    for(Layer layer : layers)
+    for(Layer layer : layers) {
       layer.seedWeights(minimum, maximum);
+    }
   }
   
   
@@ -212,8 +217,9 @@ public class Network
     if(weights.length != layers.length)
       throw new Exception("There must be as many weight arrays as layers!");
     
-    for(int i=0; i<layers.length; i++)
+    for(int i=0; i<layers.length; i++) {
       layers[i].setWeights(weights[i]);
+    }
   }
   
   /**
@@ -226,7 +232,6 @@ public class Network
   {
     layers[layer].setWeights(weights);
   }
-  
   
   /**
    * @return All layers
@@ -254,8 +259,10 @@ public class Network
     StringBuilder result = new StringBuilder();
     
     //Just every layer one after another
-    for(int i=0; i<layers.length; i++)
+    for(int i=0; i<layers.length; i++) {
       result.append(layers[i].toString());
+    }
+    
     
     return result.toString();
   }
@@ -335,8 +342,7 @@ public class Network
     
     
     //Train the network
-    net.train(1000, 0.002, -1, 1, train_input, train_output);
-    net.train(1000, 0.00002, -1, 1, train_input, train_output);
+    net.train(100, 0.00001, 0.5, -1, 1, train_input, train_output);
     
     System.out.println("\n" + net);
     System.out.println("Costs: " + net.cost(train_input, train_output));

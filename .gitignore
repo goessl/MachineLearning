@@ -22,6 +22,10 @@
 hs_err_pid*
 
 # Custom
+build.xml
+build-impl.xml
+private.xml
+project.xml
 *.properties
 *.mf
 .netbeans*
