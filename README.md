@@ -41,17 +41,19 @@ Then you can seed the weights in the network = randomize it.
 net.seedWeights(-1, 1);
 ```
 
-Now your network is ready for getting trained!
-Just feed it how often it should try adjusting every weight and how much, within which range, and of course it also needs the training data.
+Now your network is ready for training!
+Just feed it how often it should go through the whole network, how big the weight change to calculate the error gradient should be, the learning rate that gets applied to the weights, the lower and upper bounds for the weights, and of course it also needs the training data.
+* loops: more = better result but takes longer
+* epsilon: smaller = more precise gradient but could fail as the gradient approaches 0
+* learning rate: higher = faster training but to high could miss the optimum (decomment the Exception in the train function to check for an increasing error
 
 ```
-net.train(1000, 0.002, -1, 1, train_input, train_output);
+net.train(100, 0.00001, 0.5, -1, 1, train_input, train_output);
 ```
 
 If you would like to see the progress, decomment this line in the train method:
 
 ```
-//      costs[k] = cost(input, output);
 //      //For debugging output progress
 //      System.out.println(100.0*k/loops + "%: " + costs[k]);
 ```
