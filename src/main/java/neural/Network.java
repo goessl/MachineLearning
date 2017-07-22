@@ -6,7 +6,7 @@ import java.util.Arrays;
  * Neural network
  * 
  * @author Sebastian Gössl
- * @version 0.91 16.07.2017
+ * @version 0.92 22.07.2017
  */
 public class Network
 {
@@ -194,7 +194,7 @@ public class Network
   
   
   /**
-   * Initalizes all weights of all layers with numbers between -1 and 1
+   * Initalizes all weights of all layers with random numbers
    * @param minimum Minimal value a weight can have
    * @param maximum Maximal value a weight can have
    */
@@ -203,6 +203,20 @@ public class Network
     //Seed the weights of every layer
     for(Layer layer : layers) {
       layer.seedWeights(minimum, maximum);
+    }
+  }
+  
+  /**
+   * Initalizes all weights of all layers with random numbers based on a seed
+   * @param minimum Minimal value a weight can have
+   * @param maximum Maximal value a weight can have
+   * @param seed Seed for the random weights
+   */
+  public void seedWeights(double minimum, double maximum, long seed)
+  {
+    //Seed the weights of every layer
+    for(Layer layer : layers) {
+      layer.seedWeights(minimum, maximum, seed++);
     }
   }
   

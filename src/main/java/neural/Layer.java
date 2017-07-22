@@ -1,12 +1,13 @@
 package neural;
 
 import java.util.Arrays;
+import java.util.Random;
 
 /**
  * Layer of a neural network
  * 
  * @author Sebastian Gössl
- * @version 0.91 16.07.2017
+ * @version 0.92 22.07.2017
  */
 public class Layer
 {
@@ -164,9 +165,28 @@ public class Layer
    */
   public void seedWeights(double minimum, double maximum)
   {
+    Random generator = new Random();
+    
     for(double[] weightArray : weights) {
       for(int i=0; i<weightArray.length; i++) {
-        weightArray[i] = (maximum - minimum) * Math.random() + minimum;
+        weightArray[i] = (maximum - minimum) * generator.nextDouble() + minimum;
+      }
+    }
+  }
+  
+  /**
+   * Initializes all weights with random values based on a seed
+   * @param minimum Minimal value a weight can have
+   * @param maximum Maximal value a weight can have
+   * @param seed Seed for the random weights
+   */
+  public void seedWeights(double minimum, double maximum, long seed)
+  {
+    Random generator = new Random(seed);
+    
+    for(double[] weightArray : weights) {
+      for(int i=0; i<weightArray.length; i++) {
+        weightArray[i] = (maximum - minimum) * generator.nextDouble() + minimum;
       }
     }
   }

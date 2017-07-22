@@ -24,13 +24,14 @@ double[][] train_output = new double[][] {
 ```
 
 Initialize a new network with a given architecture (number or inputs, number of hidden layers their number of neurons and their activation function, number of outputs)
-(If you don't know what to choose: 
-- number of hidden layers= number of inputs
-- number of neurons per layer: number of inputs (except the last layer is the output layer= as many neurons as outputs)
+(If you don't know what to choose, here is a rule of thumb for a quadratic looking network: 
+- number of hidden layers = number of inputs
+- number of neurons per layer: number of inputs (except the last layer is the output layer = as many neurons as outputs)
 - activation functions: hyperbolic tangent)
 
 ```
-Network net = new Network(2,
+Network net = new Network(
+		2,
         new int[]{2, 1},
         new int[]{Layer.ACTIVATION_TANH, Layer.ACTIVATION_TANH});
 ```
@@ -54,7 +55,7 @@ net.train(100, 0.00001, 0.5, -1, 1, train_input, train_output);
 If you would like to see the progress, decomment this line in the train method:
 
 ```
-//      //For debugging output progress
+//      //For debugging: output the progress
 //      System.out.println(100.0*k/loops + "%: " + costs[k]);
 ```
 
@@ -65,7 +66,7 @@ System.out.println(net);
 System.out.println(Arrays.toString(net.calculate(new double[] {7, 8})));
 ```
 
-And if we would like to get the mean squared error we just call on some new test data:
+And if we would like to get the mean squared error we just call the cost function on some new test data:
 
 ```
 net.cost(train_input, train_output);
