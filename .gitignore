@@ -35,3 +35,4 @@ project.xml
 
 # Maven
 target/
+/prj/nbproject/private/
