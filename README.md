@@ -13,17 +13,17 @@ If you have some test data consisting of inputs and outputs.
 (Be sure that your data is normalized if needed!)
 
 ```
-double[][] train_input = new double[][] {
-        {1, 2},
-        {3, 4},
-        {5, 6}};
-double[][] train_output = new double[][] {
-        {0.1},
-        {0.2},
-        {0.3}};
+Matrix inputs = new Matrix(
+        new double[][]{
+          {1, 2},                   //<- first input set
+          {3, 4}});                 //<- second input set
+Matrix outputs = new Matrix(
+        new double[][]{
+          {0.5},                    //<- first output set
+          {0.75}});                 //<- second output set
 ```
 
-Initialize a new network with a given architecture (number or inputs, number of hidden layers their number of neurons and their activation function, number of outputs)
+Initialize a new network with a given architecture (number or inputs, their number of neurons in the hidden layers and each layers activation function)
 (If you don't know what to choose, here is a rule of thumb for a quadratic looking network: 
 - number of hidden layers = number of inputs
 - number of neurons per layer: number of inputs (except the last layer is the output layer = as many neurons as outputs)
@@ -31,9 +31,12 @@ Initialize a new network with a given architecture (number or inputs, number of 
 
 ```
 Network net = new Network(
-		2,
-        new int[]{2, 1},
-        new int[]{Layer.ACTIVATION_TANH, Layer.ACTIVATION_TANH});
+        2,                          //2 inputs
+        new int[]{3, 8, 1},         //3 layers with 2, 8 and 1 neurons
+        new Network.ActivationFunction[]{   //1 activation function
+          Network.ActivationFunction.NONE,  //for every layer
+          Network.ActivationFunction.TANH,
+          Network.ActivationFunction.NONE});
 ```
 
 Then you can seed the weights in the network = randomize it.
@@ -43,33 +46,29 @@ net.seedWeights(-1, 1);
 ```
 
 Now your network is ready for training!
-Just feed it how often it should go through the whole network, how big the weight change to calculate the error gradient should be, the learning rate that gets applied to the weights, the lower and upper bounds for the weights, and of course it also needs the training data.
-* loops: more = better result but takes longer
-* epsilon: smaller = more precise gradient but could fail as the gradient approaches 0
-* learning rate: higher = faster training but to high could miss the optimum (decomment the Exception in the train function to check for an increasing error
+Just say it how drastic the changes should be, how often it should go through a training cycle, the training data of course and if it should print it's progress to the console.
+* learning rate: higher = faster training but to high could miss the optimum, slower = better result (sometimer it goes crazy and the cost just increase, then try decreasing the laerning rate)
+* iterations: how often it should cycle through the training process (backpropagation and application)
+* inputs: training sets inputs
+* outputs: wanted outputs the network should imitate
+* printToConsole: show the progress in the console
+
 
 ```
-net.train(100, 0.00001, 0.5, -1, 1, train_input, train_output);
+net.train(0.001, 40, inputs, outputs, true);
 ```
 
-If you would like to see the progress, decomment this line in the train method:
-
-```
-//      //For debugging: output the progress
-//      System.out.println(100.0*k/loops + "%: " + costs[k]);
-```
-
-Now the network should be trained so let's have a look at the network itself by simply printing a basic representation and try a new input to make a prediction.
+Now the network should be trained so let's have a look at the network itself by simply printing a basic representation and try forwarding the inputs.
 
 ```
 System.out.println(net);
-System.out.println(Arrays.toString(net.calculate(new double[] {7, 8})));
+System.out.println(net.forward(inputs));
 ```
 
-And if we would like to get the mean squared error we just call the cost function on some new test data:
+And if we would like to get the mean squared error we just call the cost function on some test data:
 
 ```
-net.cost(train_input, train_output);
+System.out.println(net.cost(inputs, outputs));
 ```
 
 ## Installation

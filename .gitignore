@@ -29,10 +29,4 @@ project.xml
 *.properties
 *.mf
 .netbeans*
-
-# IntelliJ
-.idea/
-
-# Maven
-target/
-/prj/nbproject/private/
+/prj/*
