@@ -471,7 +471,7 @@ public class Network {
     Matrix yHat = forward(input);
     
     
-    delta = yHat.add(output.multiply(-1)).dot(
+    delta = yHat.subtract(output).dot(
                 activatePrime(activityZ[layerSizes.length-1],
                               activationFunctions[layerSizes.length-1]));
     if(layerSizes.length > 1) {
@@ -789,6 +789,7 @@ public class Network {
     net.train(1, 40, inputs, outputs, true);
     System.out.println("Done!" + "\n");
     
+    //Show trained network results
     System.out.println("Cost after training:");
     System.out.println(net.cost(inputs, outputs));
     System.out.println("Result after training:");

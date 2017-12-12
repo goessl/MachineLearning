@@ -288,6 +288,30 @@ public class Matrix {
     return result;
   }
   
+  /**
+   * Removes one row of the matrix
+   * @param index Index of the row to remove
+   * @return New matrix
+   */
+  public Matrix removeRow(int index) {
+    Matrix result = new Matrix(height-1, width);
+    
+    //First half
+    for(int j=0; j<index; j++) {
+      for(int i=0; i<width; i++) {
+        result.set(get(i, j), i, j);
+      }
+    }
+    //Second half
+    for(int j=index+1; j<height; j++) {
+      for(int i=0; i<width; i++) {
+        result.set(get(i, j), i, j-1);
+      }
+    }
+    
+    return result;
+  }
+  
   
   /**
    * Copies the content of the matrix into a 2-dimensional array
