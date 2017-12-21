@@ -1,10 +1,12 @@
 package neural;
 
+import java.util.Arrays;
+
 /**
  * Matrix for neural network
  * 
  * @author Sebastian Gössl
- * @version 1.0 22.07.2017
+ * @version 1.01 21.12.2017
  */
 public class Matrix {
   
@@ -269,11 +271,7 @@ public class Matrix {
    * @return New matrix
    */
   public Matrix appendRow(double[] row) {
-    if(row.length != width) {
-      throw new IllegalArgumentException("Row of wrong size");
-    }
-    
-    Matrix result = new Matrix(height + 1, width);
+    Matrix result = new Matrix(height+1, width);
     
     for(int j=0; j<height; j++) {
       for(int i=0; i<width; i++) {
@@ -311,6 +309,47 @@ public class Matrix {
     
     return result;
   }
+  
+  /**
+   * Appends a column to the right side of the matrix
+   * @param column Column to append
+   * @return New matrix
+   */
+  public Matrix appendColumn(double[] column) {
+    Matrix result = new Matrix(height, width+1);
+    
+    for(int j=0; j<height; j++) {
+      for(int i=0; i<width; i++) {
+        result.set(matrix[j][i], i, j);
+      }
+      result.set(column[j], width, j);
+    }
+    
+    return result;
+  }
+  
+  /**
+   * Removes one column of the matrix
+   * @param index Index of the column to remove
+   * @return New matrix
+   */
+  public Matrix removeColumn(int index) {
+    Matrix result = new Matrix(height, width-1);
+    
+    for(int j=0; j<height; j++) {
+      //First half
+      for(int i=0; i<index; i++) {
+        result.set(get(i, j), i, j);
+      }
+      //Second half
+      for(int i=index+1; i<width; i++) {
+        result.set(get(i, j), i-1, j);
+      }
+    }
+    
+    return result;
+  }
+  
   
   
   /**
@@ -366,6 +405,7 @@ public class Matrix {
   
   public static void main(String[] args) {
     double scalar = 2;
+    double[] array = new double[]{1, 3, 9};
     Matrix matrix1 = new Matrix(new double[][] {
       {1, 2, 3},
       {4, 5, 6},
@@ -378,25 +418,40 @@ public class Matrix {
     
     System.out.println("Scalar:");
     System.out.println(scalar + "\n");
+    System.out.println("Array:");
+    System.out.println(Arrays.toString(array) + "\n");
     System.out.println("Matrix1:");
-    System.out.println(matrix1 + "\n");
+    System.out.println(matrix1);
     System.out.println("Matrix2:");
-    System.out.println(matrix2 + "\n");
+    System.out.println(matrix2);
+    System.out.println();
     
     
     System.out.println("Sum:");
-    System.out.println(matrix1.add(matrix2) + "\n");
+    System.out.println(matrix1.add(matrix2));
     
     System.out.println("Scaled matrix:");
-    System.out.println(matrix1.multiply(scalar) + "\n");
+    System.out.println(matrix1.multiply(scalar));
     
     System.out.println("Dot product:");
-    System.out.println(matrix1.dot(matrix2) + "\n");
+    System.out.println(matrix1.dot(matrix2));
     
     System.out.println("Product:");
-    System.out.println(matrix1.multiply(matrix2) + "\n");
+    System.out.println(matrix1.multiply(matrix2));
     
     System.out.println("Transpose:");
     System.out.println(matrix1.transpose());
+    
+    System.out.println("Appending row:");
+    System.out.println(matrix1.appendRow(array));
+    
+    System.out.println("Removing row:");
+    System.out.println(matrix1.removeRow(1));
+    
+    System.out.println("Appending column:");
+    System.out.println(matrix1.appendColumn(array));
+    
+    System.out.println("Remove column:");
+    System.out.println(matrix1.removeColumn(1));
   }
 }

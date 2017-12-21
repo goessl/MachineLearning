@@ -10,7 +10,7 @@ import java.util.Random;
  * Neural network
  * 
  * @author Sebastian Gössl
- * @version 1.0 11.12.2017
+ * @version 1.01 21.12.2017
  */
 public class Network {
   
@@ -101,7 +101,7 @@ public class Network {
     
     @Override
     public String toString() {
-      return "ActivationFunction{" + name[ordinal()] + '}';
+      return name[ordinal()];
     }
   }
   
@@ -229,6 +229,11 @@ public class Network {
     //Weights
     weights = new Matrix[layerSizes.length];
     weights[0] = new Matrix(numberOfInputs, layerSizes[0]);
+    for(int j=0; j<weights[0].getHeight(); j++) {
+      for(int i=0; i<weights[0].getWidth(); i++) {
+        weights[0].set(stream.readDouble(), i, j);
+      }
+    }
     for(int k=1; k<layerSizes.length; k++) {
       weights[k] = new Matrix(layerSizes[k-1], layerSizes[k]);
       for(int j=0; j<weights[k].getHeight(); j++) {
@@ -735,13 +740,11 @@ public class Network {
   
   @Override
   public String toString() {
-    StringBuilder result = new StringBuilder("Network {\n");
-    result.append("Inputs: ").append(numberOfInputs);
-    result.append('\n');
-    result.append("Layer sizes: ").append(Arrays.toString(layerSizes));
-    result.append("\n\n");
+    StringBuilder result = new StringBuilder("Network {");
+    result.append(numberOfInputs);
+    result.append(Arrays.toString(layerSizes));
+    result.append("\n");
     
-    result.append("Layers: \n");
     for(int i=0; i<layerSizes.length; i++) {
       result.append(activationFunctions[i]).append('\n');
       result.append(weights[i]);
