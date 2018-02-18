@@ -174,10 +174,15 @@ public class Matrix {
   /**
    * Multiplies two matricies.
    * C = AB
+   * In case length of A does not equal height of B an IllegalArgumentException is thrown.
    * @param matrix2 Matrix to multiply with
    * @return Matrix product
    */
   public Matrix multiply(Matrix matrix2) {
+    
+    if (this.getWidth() != matrix2.getHeight()) {
+      throw new IllegalArgumentException("Matrix dimensions not compatible for multiplication");
+    }
     Matrix result = new Matrix(height, matrix2.getWidth());
     
     for(int j=0; j<result.height; j++) {
@@ -374,6 +379,9 @@ public class Matrix {
       {1, 4, 7},
       {2, 5, 8},
       {3, 6, 9}});
+    Matrix matrix3 = new Matrix(new double[][] {
+      {1, 2},
+    {3, 4}});
     
     
     System.out.println("Scalar:");
@@ -398,5 +406,8 @@ public class Matrix {
     
     System.out.println("Transpose:");
     System.out.println(matrix1.transpose());
+    
+    System.out.println("Failed Multiplication:");
+    System.out.println(matrix1.multiply(matrix3) + "\n");
   }
 }
