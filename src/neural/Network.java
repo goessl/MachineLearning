@@ -10,7 +10,7 @@ import java.util.Random;
  * Neural network
  * 
  * @author Sebastian Gössl
- * @version 1.01 21.12.2017
+ * @version 1.1 22.02.2018
  */
 public class Network {
   
@@ -27,10 +27,11 @@ public class Network {
       "SoftPlus", "Leaky rectified linear unit"
     };
     
+    
     /**
      * Applies itself to the input
      * @param input The input for the function
-     * @return Activated input
+     * @return The output of the function
      */
     public double activate(double input) {
       switch(this) {
@@ -57,6 +58,7 @@ public class Network {
             return RELU_LEAKY_LEAKAGE * input;
           }
         
+        
         default:
         case NONE:
           return input;
@@ -64,9 +66,9 @@ public class Network {
     }
     
     /**
-     * Applies its derivative to the input
+     * Applies it self's derivative to the input
      * @param input The input for the function
-     * @return Activated input
+     * @return The output of the function's derivative
      */
     public double activatePrime(double input) {
       switch(this) {
@@ -93,11 +95,14 @@ public class Network {
             return RELU_LEAKY_LEAKAGE;
           }
         
+        
         default:
         case NONE:
           return input;
       }
     }
+    
+    
     
     @Override
     public String toString() {
@@ -107,15 +112,14 @@ public class Network {
   
   
   
-  /** Number of input nodes */
+  /** Number of input neurons */
   private final int numberOfInputs;
-  /** Number of nodes in each layer */
+  /** Number of neurons in each layer */
   private final int[] layerSizes;
   /** Each layers activation function */
   private final ActivationFunction[] activationFunctions;
   
-  /** Weights, first index = layer,
-   * second index = input node, third index = output node */
+  /** Weights */
   private Matrix[] weights;
   /** Activities, needed for backpropagation */
   private Matrix[] activityA;
@@ -124,7 +128,7 @@ public class Network {
   
   
   /**
-   * Copies a existing network
+   * Constructs a new copy of an existing network
    * @param net  Network to copy
    */
   public Network(Network net) {
@@ -134,16 +138,28 @@ public class Network {
   }
   
   /**
-   * Generates a new network
-   * @param numberOfInputs Number of inputs
-   * @param layerSizes Numbers of nodes in each hidden layer,
-   * last one is number of outputs
-   * @param activationFunction Activation function on every layer
+   * Constructs a new network
+   * @param numberOfInputs Number of input neurons
+   * @param layerSizes Numbers of neurons in each hidden layer,
+   *                   last one is the number of output neurons
+   * @param activationFunction Activation function of every layer
+   * @throws IllegalArgumentException If the number of input neurons
+   *         or the number Of given layers is less than 1
    */
   public Network(int numberOfInputs, int[] layerSizes,
           ActivationFunction activationFunction) {
+    if(numberOfInputs < 1) {
+      throw new IllegalArgumentException(
+              "Number of input neurons less than 1!");
+    }
     if(layerSizes.length < 1) {
-      throw new IllegalArgumentException("Minimum of one layer needed");
+      throw new IllegalArgumentException("Number of layers less than 1!");
+    }
+    for(int layerSize : layerSizes) {
+      if(layerSize < 1) {
+        throw new IllegalArgumentException(
+                "Number of neurons in layer less than 1!");
+      }
     }
     
     
@@ -170,7 +186,7 @@ public class Network {
   }
   
   /**
-   * Generates a new network
+   * Constructs a new network
    * @param numberOfInputs Number of inputs
    * @param layerSizes Numbers of nodes in each hidden layer,
    * last one is number of outputs
@@ -178,13 +194,22 @@ public class Network {
    */
   public Network(int numberOfInputs, int[] layerSizes,
           ActivationFunction[] activationFunctions) {
-    if(layerSizes.length < 1) {
+    if(numberOfInputs < 1) {
       throw new IllegalArgumentException(
-              "Minimum of one layer needed");
+              "Number of input neurons less than 1!");
+    }
+    if(layerSizes.length < 1) {
+      throw new IllegalArgumentException("Number of layers less than 1!");
     }
     if(activationFunctions.length != layerSizes.length) {
       throw new IllegalArgumentException(
-              "Activation function needed for every layer");
+              "Not as many activation functions as layers!");
+    }
+    for(int layerSize : layerSizes) {
+      if(layerSize < 1) {
+        throw new IllegalArgumentException(
+                "Number of neurons in layer less than 1!");
+      }
     }
     
     
@@ -208,7 +233,7 @@ public class Network {
   }
   
   /**
-   * Reads a saved network from a stream
+   * Constructs a new network based on a saved one
    * @param stream Stream to read from
    * @throws IOException 
    */
@@ -252,83 +277,69 @@ public class Network {
   
   /**
    * Seeds the weights within the given boundaries
-   * @param minimum Minimum weight value
-   * @param maximum Maximum weight value
+   * @param minimum Minimum value
+   * @param maximum Maximum value
    */
   public void seedWeights(double minimum, double maximum) {
-    Random generator = new Random();
-    
     for(Matrix layer : weights) {
-      for(int j=0; j<layer.getHeight(); j++) {
-        for(int i=0; i<layer.getWidth(); i++) {
-          layer.set(
-                  (maximum - minimum) * generator.nextDouble() + minimum,
-                  i, j);
-        }
-      }
+      layer.rand(minimum, maximum);
     }
   }
   
   /**
-   * Seeds the weights within the given boundaries based on the seed
-   * @param seed Seed for the random generator
-   * @param minimum Minimum weight value
-   * @param maximum Maximum weight value
+   * Seeds the weights within the given boundaries, based on a seed
+   * @param seed Seed for the random number generator
+   * @param minimum Minimum value
+   * @param maximum Maximum value
    */
   public void seedWeights(long seed, double minimum, double maximum) {
-    Random generator = new Random(seed);
-    
     for(Matrix layer : weights) {
-      for(int j=0; j<layer.getHeight(); j++) {
-        for(int i=0; i<layer.getWidth(); i++) {
-          layer.set(
-                  (maximum - minimum) * generator.nextDouble() + minimum,
-                  i, j);
-        }
-      }
+      layer.rand(seed, minimum, maximum);
     }
   }
   
   /**
    * Seeds the weights within the given boundaries for each layer
-   * @param minimums Minimum for weight values on every layer
-   * @param maximums Maximum for weight values on every layer
+   * @param minimums Minimum values for every layer
+   * @param maximums Maximum values for every layer
+   * @throws IllegalArgumentException If the number of boundaries
+   *         does not equal the number of layers
    */
   public void seedWeights(double[] minimums, double[] maximums) {
-    Random generator = new Random();
+    if(minimums.length != layerSizes.length
+            || maximums.length != layerSizes.length) {
+      throw new IllegalArgumentException("Illegal number of boundaries!");
+    }
     
-    for(int k=0; k<weights.length; k++) {
-      for(int j=0; j<weights[k].getHeight(); j++) {
-        for(int i=0; i<weights[k].getWidth(); i++) {
-          weights[k].set(
-                  (maximums[k] - minimums[k]) * generator.nextDouble()
-                          + minimums[k],
-                  i, j);
-        }
-      }
+    
+    for(int i=0; i<weights.length; i++) {
+      weights[i].rand(minimums[i], maximums[i]);
     }
   }
   
   /**
-   * Seeds the weights within the given boundaries for each layer
-   * @param seed Seed for the random generator
-   * @param minimums Minimum for weight values on every layer
-   * @param maximums Maximum for weight values on every layer
+   * Seeds the weights within the given boundaries for each layer,
+   * based on a seed
+   * @param seed Seed for the random number generator
+   * @param minimums Minimum values for every layer
+   * @param maximums Maximum values for every layer
+   * @throws IllegalArgumentException If the number of boundaries
+   *         does not equal the number of layers
    */
   public void seedWeights(long seed, double[] minimums, double[] maximums) {
-    Random generator = new Random(seed);
+    if(minimums.length != layerSizes.length
+            || maximums.length != layerSizes.length) {
+      throw new IllegalArgumentException("Illegal number of boundaries!");
+    }
     
-    for(int k=0; k<weights.length; k++) {
-      for(int j=0; j<weights[k].getHeight(); j++) {
-        for(int i=0; i<weights[k].getWidth(); i++) {
-          weights[k].set(
-                  (maximums[k] - minimums[k]) * generator.nextDouble()
-                          + minimums[k],
-                  i, j);
-        }
-      }
+    
+    final Random rand = new Random(seed);
+    
+    for(int i=0; i<weights.length; i++) {
+      weights[i].rand(rand, minimums[i], maximums[i]);
     }
   }
+  
   
   /** Keeps weights real */
   public void keepWeightsInBounds() {
@@ -336,12 +347,14 @@ public class Network {
       for(int j=0; j<layer.getHeight(); j++) {
         for(int i=0; i<layer.getWidth(); i++)
         {
-          if(layer.get(i, j) == Double.POSITIVE_INFINITY) {
-            layer.set(Double.MAX_VALUE, i, j);
-          } else if(layer.get(i, j) == Double.NEGATIVE_INFINITY) {
-            layer.set(-Double.MAX_VALUE, i, j);
-          } else if(Double.isNaN(layer.get(i, j))) {
+          final double element = layer.get(i, j);
+          
+          if(Double.isNaN(element)) {
             layer.set(0, i, j);
+          } else if(element == Double.NEGATIVE_INFINITY) {
+            layer.set(-Double.MAX_VALUE, i, j);
+          } else if(element == Double.POSITIVE_INFINITY) {
+            layer.set(Double.MAX_VALUE, i, j);
           }
         }
       }
@@ -349,8 +362,8 @@ public class Network {
   }
   
   /** Keeps weights within boundaries
-   * @param minimum Minimum weight value
-   * @param maximum Maximum weight value
+   * @param minimum Minimum value
+   * @param maximum Maximum value
    */
   public void keepWeightsInBounds(double minimum, double maximum) {
     for(Matrix layer : weights) {
@@ -359,9 +372,13 @@ public class Network {
         {
           if(Double.isNaN(layer.get(i, j))) {
             layer.set(0, i, j);
-          } else if(layer.get(i, j) < minimum) {
+          }
+          
+          final double element = layer.get(i, j);
+          
+          if(element < minimum) {
             layer.set(minimum, i, j);
-          } else if(layer.get(i, j) > maximum) {
+          } else if(element > maximum) {
             layer.set(maximum, i, j);
           }
         }
@@ -371,29 +388,19 @@ public class Network {
   
   
   /**
-   * Forward propagates one data set
-   * @param input Input set
-   * @return Output set
-   */
-  public double[] forward(double[] input) {
-    return forward(new Matrix(new double[][]{input})).toArray()[0];
-  }
-  
-  /**
-   * Forward propagates data sets (Array)
+   * Forward propagates a matrix of data sets.
+   * Every data set is arranged in a row
    * @param input Input sets
    * @return Output sets
-   */
-  public double[][] forward(double[][] input) {
-    return forward(new Matrix(input)).toArray();
-  }
-  
-  /**
-   * Forward propagates data sets
-   * @param input Input sets
-   * @return Output sets
+   * @throws IllegalArgumentException If the number of input values
+   *         does not equal the number of input neurons
    */
   public Matrix forward(Matrix input) {
+    if(input.getWidth() != getNumberOfInputs()) {
+      throw new IllegalArgumentException("Illegal number of inputs!");
+    }
+    
+    
     activityZ[0] = input.multiply(weights[0]);
     activityA[0] = activate(activityZ[0], activationFunctions[0]);
     
@@ -406,18 +413,21 @@ public class Network {
   }
   
   /**
-   * Applies the activation function to a matrix
+   * Applies an activation function to a matrix
    * @param input Input matrix
    * @param activationFunction Activation function
-   * @return Input matrix with applied activation function
+   * @return Resulted matrix of the activation
    */
   private Matrix activate(Matrix input,
           ActivationFunction activationFunction) {
-    Matrix output = new Matrix(input.getHeight(), input.getWidth());
+    final Matrix output = new Matrix(input.getHeight(), input.getWidth());
     
     for(int j=0; j<input.getHeight(); j++) {
       for(int i=0; i<input.getWidth(); i++) {
-        output.set(activationFunction.activate(input.get(i, j)), i, j);
+        final double inputValue = input.get(i, j);
+        final double outputValue = activationFunction.activate(inputValue);
+        
+        output.set(outputValue, i, j);
       }
     }
     
@@ -425,18 +435,21 @@ public class Network {
   }
   
   /**
-   * Applies the activation functions derivative to a matrix
+   * Applies the activation function's derivative to a matrix
    * @param input Input matrix
    * @param activationFunction Activation function
-   * @return Input matrix with applied activation functions derivative
+   * @return Resulted matrix of the activation
    */
   private Matrix activatePrime(Matrix input,
           ActivationFunction activationFunction) {
-    Matrix output = new Matrix(input.getHeight(), input.getWidth());
+    final Matrix output = new Matrix(input.getHeight(), input.getWidth());
     
     for(int j=0; j<input.getHeight(); j++) {
       for(int i=0; i<input.getWidth(); i++) {
-        output.set(activationFunction.activatePrime(input.get(i, j)), i, j);
+        final double inputValue = input.get(i, j);
+        final double outputValue = activationFunction.activatePrime(inputValue);
+        
+        output.set(outputValue, i, j);
       }
     }
     
@@ -446,37 +459,65 @@ public class Network {
   
   /**
    * Calculates the mean squared error of the prediction to the actual output
-   * @param input Input to base prediction on
-   * @param output Actual output
-   * @return Cost
+   * @param input Input sets
+   * @param output Actual output sets
+   * @return Mean squared error
+   * @throws IllegalArgumentException If the number of inputs or outputs
+   *         does not fit the dimensions of this network or the number
+   *         of input sets is not equal to the number of output sets
    */
   public double cost(Matrix input, Matrix output) {
+    if(output.getWidth() != getNumberOfOutputs()) {
+      throw new IllegalArgumentException("Illegal number of outputs!");
+    }
+    if(input.getHeight() != output.getHeight()) {
+      throw new IllegalArgumentException(
+              "Unequal number of input and output sets!");
+    }
+    
+    
     double cost = 0;
-    Matrix yHat = forward(input);
+    final Matrix yHat = forward(input);
     
     for(int j=0; j<yHat.getHeight(); j++) {
       for(int i=0; i<yHat.getWidth(); i++) {
-        cost += (output.get(i, j) - yHat.get(i, j)) * (output.get(i, j) - yHat.get(i, j));
+        cost += (output.get(i, j) - yHat.get(i, j))
+                * (output.get(i, j) - yHat.get(i, j));
       }
     }
     cost /= 2;
+    
     
     return cost/input.getHeight();
   }
   
   /**
-   * Backpropagates the cost to every weight
+   * Backpropagates the error to every weight
    * @param input Input sets
    * @param output Wanted output sets
-   * @return Derivative of the cost to every weight
+   * @return Derivative of the error to every weight
+   * @throws IllegalArgumentException If the number of inputs or outputs
+   *         does not fit the dimensions of this network or the number
+   *         of input sets is not equal to the number of output sets
    */
   public Matrix[] costPrime(Matrix input, Matrix output) {
+    if(input.getWidth() != getNumberOfInputs()) {
+      throw new IllegalArgumentException("Illegal number of inputs!");
+    }
+    if(output.getWidth() != getNumberOfOutputs()) {
+      throw new IllegalArgumentException("Illegal number of outputs!");
+    }
+    if(input.getHeight() != output.getHeight()) {
+      throw new IllegalArgumentException(
+              "Unequal number of input and output sets!");
+    }
+    
+    
     Matrix delta;
-    Matrix[] dJdW = new Matrix[layerSizes.length];
-    Matrix yHat = forward(input);
+    final Matrix[] dJdW = new Matrix[layerSizes.length];
+    final Matrix yHat = forward(input);
     
-    
-    delta = yHat.subtract(output).dot(
+    delta = yHat.subtract(output).multiplyElementwise(
                 activatePrime(activityZ[layerSizes.length-1],
                               activationFunctions[layerSizes.length-1]));
     if(layerSizes.length > 1) {
@@ -485,13 +526,13 @@ public class Network {
     }
     
     for(int i=layerSizes.length-2; i>0; i--) {
-      delta = delta.multiply(weights[i+1].transpose()).dot(
+      delta = delta.multiply(weights[i+1].transpose()).multiplyElementwise(
               activatePrime(activityZ[i], activationFunctions[i]));
       dJdW[i] = activityA[i-1].transpose().multiply(delta);
     }
     
     if(layerSizes.length > 1) {
-      delta = delta.multiply(weights[1].transpose()).dot(
+      delta = delta.multiply(weights[1].transpose()).multiplyElementwise(
                   activatePrime(activityZ[0], activationFunctions[0]));
     }
     
@@ -503,16 +544,19 @@ public class Network {
   
   
   /**
-   * Trains the network for maxIteration times
-   * @param learningRate Learning rate, higher = faster training, smaller = better result
-   * @param maxIterations Number of iterations to do
+   * Trains the network
+   * (override the method "keepTraining" to set the continuation condition)
+   * @param learningRate Learning rate
    * @param input Input sets
    * @param output Wanted output sets
    * @param printToConsole Print progress to console
    * @return Last cost
+   * @throws IllegalArgumentException If the number of inputs or outputs
+   *         does not fit the dimensions of this network or the number
+   *         of input sets is not equal to the number of output sets
    */
-  public double train(double learningRate, int maxIterations,
-          Matrix input, Matrix output, boolean printToConsole) {
+  public double train(double learningRate, Matrix input, Matrix output,
+          boolean printToConsole) {
     int iterations = 0;
     double improvement;
     double lastCost = cost(input, output);
@@ -522,20 +566,21 @@ public class Network {
     
     
     //Train until there is no change
-    while(iterations<maxIterations && learningRate>0)
+    while(keepTraining(iterations, learningRate, lastCost) && learningRate>0)
     {
       //Save weights
-      Matrix[] lastWeights = copyWeights();
+      final Matrix[] lastWeights = copyWeights();
       
       
       //Try a single training run
-      double currentCost = trainSingle(learningRate, input, output);
+      final double currentCost = trainSingle(learningRate, input, output);
       
       //Save improvement
       improvement = 100 * (lastCost - currentCost) / lastCost;
       
       if(printToConsole)
-        System.out.print(String.format("%e: %e -> %e (%e%%) ", learningRate, lastCost, currentCost, improvement));
+        System.out.print(String.format("%e: %e -> %e (%e%%) ",
+                learningRate, lastCost, currentCost, improvement));
       
       //If it got better
       if(currentCost <= lastCost)
@@ -568,15 +613,29 @@ public class Network {
   }
   
   /**
+   * Tells the network how long to continue to train
+   * @param iterations Number of completed training cycles
+   * @param learningRate Current learning rate
+   * @param cost Current cost
+   * @return If the training process should continue
+   */
+  public boolean keepTraining(int iterations, double learningRate,
+          double cost) {
+    throw new UnsupportedOperationException("Override for training!");
+  }
+  
+  /**
    * Backpropagates and applies the gradient with a learning rate once
-   * @param learningRate Learning rate, higher = faster training, smaller = better result
+   * @param learningRate Learning rate
    * @param input Input sets
    * @param output Wanted output sets
-   * @return New costs after training
+   * @return New costs after training iteration
+   * @throws IllegalArgumentException If the number of inputs or outputs
+   *         does not fit the dimensions of this network or the number
+   *         of input sets is not equal to the number of output sets
    */
-  public double trainSingle(double learningRate,
-          Matrix input, Matrix output) {
-    Matrix[] dJdW = costPrime(input, output);
+  public double trainSingle(double learningRate, Matrix input, Matrix output) {
+    final Matrix[] dJdW = costPrime(input, output);
     
     for(int i=0; i<weights.length; i++) {
       weights[i] = weights[i].add(dJdW[i].multiply(-learningRate));
@@ -648,11 +707,12 @@ public class Network {
   }
   
   /**
-   * Copies the weights into a new array
+   * Makes a copy of the weights
    * @return Copy of the weights
    */
   public Matrix[] copyWeights() {
-    Matrix[] copy = new Matrix[layerSizes.length];
+    final Matrix[] copy = new Matrix[layerSizes.length];
+    
     for(int i=0; i<weights.length; i++) {
       copy[i] = new Matrix(weights[i]);
     }
@@ -671,17 +731,9 @@ public class Network {
                       + ", should be: " + this.weights.length);
     }
     
+    
     for(int i=0; i<this.weights.length; i++) {
-      if(weights[i].getHeight() != this.weights[i].getHeight()) {
-        throw new IllegalArgumentException(
-                "Layer [" + i + "] wrong height. Is: " + weights[i].getHeight()
-                        + ", should be: " + this.weights[i].getHeight());
-      }
-      if(weights[i].getWidth() != this.weights[i].getWidth()) {
-        throw new IllegalArgumentException(
-                "Layer [" + i + "] wrong width. Is: " + weights[i].getWidth()
-                        + ", should be: " + this.weights[i].getWidth());
-      }
+      setWeights(weights[i], i);
     }
     
     this.weights = weights;
@@ -740,14 +792,14 @@ public class Network {
   
   @Override
   public String toString() {
-    StringBuilder result = new StringBuilder("Network {");
+    final StringBuilder result = new StringBuilder("Network {");
     result.append(numberOfInputs);
     result.append(Arrays.toString(layerSizes));
     result.append("\n");
     
     for(int i=0; i<layerSizes.length; i++) {
       result.append(activationFunctions[i]).append('\n');
-      result.append(weights[i]);
+      result.append(weights[i]).append('\n');
     }
     result.append('}');
     
@@ -764,17 +816,30 @@ public class Network {
             new int[]{3, 8, 1},         //3 layers with 2, 8 and 1 neurons
             new Network.ActivationFunction[]{   //1 activation function
               Network.ActivationFunction.NONE,  //for every layer
-              Network.ActivationFunction.TANH,
-              Network.ActivationFunction.NONE});
-    //2 training sets (given inputs with wanted outputs)
+              Network.ActivationFunction.RELU,
+              Network.ActivationFunction.NONE}) {
+                //Override keepTraining to return true for 100 cycles
+                @Override
+                public boolean keepTraining(int iterations,
+                        double learningRate, double cost)
+                {
+                  return iterations < 100;
+                }
+              };
+    //4 training sets (given inputs with wanted outputs)
     Matrix inputs = new Matrix(
             new double[][]{
               {1, 2},                   //<- first input set
-              {3, 4}});                 //<- second input set
+              {3, 4},                   //<- second input set ...
+              {5, 6},
+              {7, 8}});
     Matrix outputs = new Matrix(
             new double[][]{
-              {0.5},                    //<- first output set
-              {0.75}});                 //<- second output set
+              {0.25},                   //<- first output set
+              {0.50},                   //<- second output set ...
+              {0.75},
+              {1.00}});
+    
     
     //Seed weights
     net.seedWeights(-1, 1);
@@ -787,9 +852,9 @@ public class Network {
     System.out.println("Result before training:");
     System.out.println(net.forward(inputs) + "\n");
     
-    //Train for 40 cycles
+    //Train
     System.out.println("Training ...");
-    net.train(1, 40, inputs, outputs, true);
+    net.train(0.01, inputs, outputs, true);
     System.out.println("Done!" + "\n");
     
     //Show trained network results
