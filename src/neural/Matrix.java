@@ -1,13 +1,14 @@
 package neural;
 
-import java.util.Arrays;
 import java.util.Random;
+import java.util.function.BiFunction;
+import java.util.function.DoubleFunction;
 
 /**
  * Matrix class for storage & calculations
  * 
  * @author Sebastian Gössl
- * @version 1.1 22.02.2018
+ * @version 1.2 26.03.2018
  */
 public class Matrix {
   
@@ -27,7 +28,7 @@ public class Matrix {
     
     for(int j=0; j<getHeight(); j++) {
       for(int i=0; i<getWidth(); i++) {
-        set(input.get(i, j), i, j);
+        set(j, i, input.get(j, i));
       }
     }
   }
@@ -35,8 +36,7 @@ public class Matrix {
   /**
    * Constructs a new Matrix with the content of a 2-dimensional array
    * @param array Array which contents should be copied into this matrix
-   * @throws IllegalArgumentException If the input array is not possible
-   *         to convert to a matrix
+   * @throws IllegalArgumentException If the input array is not rectangular
    */
   public Matrix(double[][] array) {
     this(array.length, array[0].length);
@@ -47,7 +47,7 @@ public class Matrix {
       }
       
       for(int i=0; i<getWidth(); i++) {
-        set(array[j][i], i, j);
+        set(j, i, array[j][i]);
       }
     }
   }
@@ -61,7 +61,7 @@ public class Matrix {
    */
   public Matrix(int height, int width) {
     if(height < 1 || width < 1) {
-      throw new IllegalArgumentException("Dimensions less than 1!");
+      throw new IllegalArgumentException("Dimension(s) less than 1!");
     }
     
     
@@ -75,36 +75,36 @@ public class Matrix {
   
   /**
    * Sets the value of a specific element
+   * @param row Row index of the element
+   * @param column Column index of the element
    * @param value Value to set the element to
-   * @param x X-Coordinate of the element
-   * @param y Y-Coordinate of the element
-   * @throws IllegalArgumentException If the indices are smaller than 0
+   * @throws ArrayIndexOutOfBoundsException If the indices are smaller than 0
    *         or bigger than the width/height -1
    */
-  public void set(double value, int x, int y) {
-    if(x < 0 || x >= getWidth() || y < 0 || y >= getHeight()) {
-      throw new IllegalArgumentException("Indices out of bounds!");
+  public void set(int row, int column, double value) {
+    if(row < 0 || row >= getHeight() || column < 0 || column >= getWidth()) {
+      throw new ArrayIndexOutOfBoundsException("Indices out of bounds!");
     }
     
     
-    matrix[y][x] = value;
+    matrix[row][column] = value;
   }
   
   /**
    * Returns the value of a specific element
-   * @param x X-Coordinate of the position to read from
-   * @param y Y-Coordinate of the position to read from
-   * @return Value of the position
-   * @throws IllegalArgumentException If the indices are smaller than 0
+   * @param row Row index of the element
+   * @param column Column index of the element
+   * @return The value of the element
+   * @throws ArrayIndexOutOfBoundsException If the indices are smaller than 0
    *         or bigger than the width/height -1
    */
-  public double get(int x, int y) {
-    if(x < 0 || x >= getWidth() || y < 0 || y >= getHeight()) {
-      throw new IllegalArgumentException("Indices out of bounds!");
+  public double get(int row, int column) {
+    if(row < 0 || row >= getHeight() || column < 0 || column >= getWidth()) {
+      throw new ArrayIndexOutOfBoundsException("Indices out of bounds!");
     }
     
     
-    return matrix[y][x];
+    return matrix[row][column];
   }
   
   /**
@@ -125,13 +125,26 @@ public class Matrix {
   
   
   /**
+   * Sets every element of the matrix to the given value
+   * @param value Value to set every element to
+   */
+  public void fill(double value) {
+    for(int j=0; j<getHeight(); j++) {
+      for(int i=0; i<getWidth(); i++) {
+        set(j, i, value);
+      }
+    }
+  }
+  
+  
+  /**
    * Adds the given matrix to this matrix.
    * C = A + B
    * C[i, j] = A[i, j] + B[i, j]
-   * @param matrix2 Second matrix (summand)
+   * @param matrix2 Second matrix to add (summand)
    * @return Sum of the two matricies
    * @throws IllegalArgumentException If the matricies are not
-   *         of the same dimensions
+   *        of the same dimensions
    */
   public Matrix add(Matrix matrix2) {
     if(matrix2.getHeight() != getHeight()
@@ -142,9 +155,9 @@ public class Matrix {
     
     final Matrix result = new Matrix(getHeight(), getWidth());
     
-    for(int j=0; j<getHeight(); j++) {
-      for(int i=0; i<getWidth(); i++) {
-        result.set(get(i, j) + matrix2.get(i, j), i, j);
+    for(int j=0; j<result.getHeight(); j++) {
+      for(int i=0; i<result.getWidth(); i++) {
+        result.set(j, i, get(j, i) + matrix2.get(j, i));
       }
     }
     
@@ -158,7 +171,7 @@ public class Matrix {
    * @param matrix2 Second matrix to subtract (subtrahend)
    * @return Difference of the two matricies
    * @throws IllegalArgumentException If the matricies are not
-   *         of the same dimensions
+   *        of the same dimensions
    */
   public Matrix subtract(Matrix matrix2) {
     if(matrix2.getHeight() != getHeight()
@@ -169,55 +182,9 @@ public class Matrix {
     
     final Matrix result = new Matrix(getHeight(), getWidth());
     
-    for(int j=0; j<getHeight(); j++) {
-      for(int i=0; i<getWidth(); i++) {
-        result.set(get(i, j) - matrix2.get(i, j), i, j);
-      }
-    }
-    
-    return result;
-  }
-  
-  /**
-   * Scalar multiplies this matrix with the given factor.
-   * C = b * A
-   * C[i, j] = b * A[i, j]
-   * @param factor Scalar to multiply every element with
-   * @return Scaled matrix
-   */
-  public Matrix multiply(double factor) {
-    final Matrix result = new Matrix(getHeight(), getWidth());
-    
-    for(int j=0; j<getHeight(); j++) {
-      for(int i=0; i<getWidth(); i++) {
-        result.set(factor * get(i, j), i, j);
-      }
-    }
-    
-    return result;
-  }
-  
-  /**
-   * Multiplies this matrix with the given matrix.
-   * C = A o B
-   * C[i, j] = A[i, j] * B[i, j]
-   * @param matrix2 Second matrix to multiply elementwise (factor)
-   * @return Elementwise/Hadamard product
-   * @throws IllegalArgumentException If the matricies are not
-   *         of the same dimensions
-   */
-  public Matrix multiplyElementwise(Matrix matrix2) {
-    if(matrix2.getHeight() != getHeight()
-            || matrix2.getWidth() != getWidth()) {
-      throw new IllegalArgumentException("Dimensions not compatible!");
-    }
-    
-    
-    final Matrix result = new Matrix(getHeight(), getWidth());
-    
-    for(int j=0; j<getHeight(); j++) {
-      for(int i=0; i<getWidth(); i++) {
-        result.set(get(i, j) * matrix2.get(i, j), i, j);
+    for(int j=0; j<result.getHeight(); j++) {
+      for(int i=0; i<result.getWidth(); i++) {
+        result.set(j, i, get(j, i) - matrix2.get(j, i));
       }
     }
     
@@ -229,9 +196,9 @@ public class Matrix {
    * C = AB
    * C[i, j] = A[i, 1]*B[1, j] + ... + A[i, m]*B[m, j]
    * @param matrix2 Second matrix to multiply (factor)
-   * @return Matrix product
-   * @throws IllegalArgumentException If the second matrix is not as high
-   *         as this matrix wide
+   * @return Matrix product of the two matricies
+   * @throws IllegalArgumentException If the second matrix' height does not
+   *        equal this matrix' width
    */
   public Matrix multiply(Matrix matrix2) {
     if(matrix2.getHeight() != getWidth()) {
@@ -243,16 +210,132 @@ public class Matrix {
     
     for(int j=0; j<result.getHeight(); j++) {
       for(int i=0; i<result.getWidth(); i++) {
-        result.set(0, i, j);
         
+        double sum = 0;
         for(int k=0; k<getWidth(); k++) {
-          result.set(result.get(i, j) + get(k, j)*matrix2.get(i, k), i, j);
+          sum += get(j, k) * matrix2.get(k, i);
         }
+        
+        result.set(j, i, sum);
       }
     }
     
     return result;
   }
+  
+  /**
+   * Multiplies this matrix with the given matrix elementwise.
+   * C = A o B
+   * C[i, j] = A[i, j] * B[i, j]
+   * @param matrix2 Second matrix to multiply elementwise (factor)
+   * @return Elementwise/Hadamard product
+   * @throws IllegalArgumentException If the matricies are not
+   *        of the same dimensions
+   */
+  public Matrix multiplyElementwise(Matrix matrix2) {
+    if(matrix2.getHeight() != getHeight()
+            || matrix2.getWidth() != getWidth()) {
+      throw new IllegalArgumentException("Dimensions not compatible!");
+    }
+    
+    
+    final Matrix result = new Matrix(getHeight(), getWidth());
+    
+    for(int j=0; j<result.getHeight(); j++) {
+      for(int i=0; i<result.getWidth(); i++) {
+        result.set(j, i, get(j, i) * matrix2.get(j, i));
+      }
+    }
+    
+    return result;
+  }
+  
+  /**
+   * Scalar multiplies this matrix with the given factor.
+   * C = b * A
+   * C[i, j] = b * A[i, j]
+   * @param value Scalar to multiply every element with
+   * @return Scaled matrix
+   */
+  public Matrix multiply(double value) {
+    final Matrix result = new Matrix(getHeight(), getWidth());
+    
+    for(int j=0; j<result.getHeight(); j++) {
+      for(int i=0; i<result.getWidth(); i++) {
+        result.set(j, i, value * get(j, i));
+      }
+    }
+    
+    return result;
+  }
+  
+  /**
+   * Divides this matrix by the given matrix elementwise.
+   * C[i, j] = A[i, j] / B[i, j]
+   * @param matrix2 Second matrix to divide by elementwise (divisor)
+   * @return Elementwise quotient
+   * @throws IllegalArgumentException If the matricies are not
+   *        of the same dimensions
+   */
+  public Matrix divideElementwise(Matrix matrix2) {
+    if(matrix2.getHeight() != getHeight()
+            || matrix2.getWidth() != getWidth()) {
+      throw new IllegalArgumentException("Dimensions not compatible!");
+    }
+    
+    
+    final Matrix result = new Matrix(getHeight(), getWidth());
+    
+    for(int j=0; j<result.getHeight(); j++) {
+      for(int i=0; i<result.getWidth(); i++) {
+        result.set(j, i, get(j, i) / matrix2.get(j, i));
+      }
+    }
+    
+    return result;
+  }
+  
+  
+  /**
+   * Applies the given function on every element of the matrix.
+   * B[i, j] = f(A[i, j])
+   * @param function Function that gets applied on every element
+   * @return Resulting matrix
+   */
+  public Matrix apply(DoubleFunction<Double> function) {
+    final Matrix result = new Matrix(getHeight(), getWidth());
+    
+    for(int j=0; j<result.getHeight(); j++) {
+      for(int i=0; i<result.getWidth(); i++) {
+        result.set(j, i, function.apply(get(j, i)));
+      }
+    }
+    
+    return result;
+  }
+  
+  /**
+   * Applies the given function,
+   * on every element of this and the given matrix,
+   * and writes the output into the corresponding element of a new matrix.
+   * C[i, j] = f(A[i, j], B[i, j])
+   * @param matrix2
+   * @param function Function that gets applied on every element
+   * @return Resulting matrix
+   */
+  public Matrix apply(Matrix matrix2,
+          BiFunction<Double, Double, Double> function) {
+    final Matrix result = new Matrix(getHeight(), getWidth());
+    
+    for(int j=0; j<result.getHeight(); j++) {
+      for(int i=0; i<result.getWidth(); i++) {
+        result.set(j, i, function.apply(get(j, i), matrix2.get(j, i)));
+      }
+    }
+    
+    return result;
+  }
+  
   
   /**
    * Transposes this matrix
@@ -263,7 +346,7 @@ public class Matrix {
     
     for(int j=0; j<result.getHeight(); j++) {
       for(int i=0; i<result.getWidth(); i++) {
-        result.set(get(j, i), i, j);
+        result.set(j, i, get(i, j));
       }
     }
     
@@ -272,27 +355,45 @@ public class Matrix {
   
   
   /**
-   * Appends a row to the end of this matrix
-   * @param row Row to append
-   * @return New matrix
-   * @throws IllegalArgumentException If the row is not as wide as this matrix
+   * Extracts a single row as a new Matrix
+   * @param index Index of the row that should be extracted
+   * @return The single row as a new Matrix
+   * @throws ArrayIndexOutOfBoundsException If the index does not point
+   *        to an existing row
    */
-  public Matrix appendRow(double[] row) {
-    if(row.length != getWidth()) {
-      throw new IllegalArgumentException("Row not compatible!");
+  public Matrix getRow(int index) {
+    if(index < 0 || index >= getWidth()) {
+      throw new ArrayIndexOutOfBoundsException("Index out of bounds!");
+    }
+    
+    return getRows(index, index + 1);
+  }
+  
+  /**
+   * Extracts multiple rows as a new Matrix
+   * @param fromIndex Index of the first row
+   *        that should be extracted (inclusive)
+   * @param toIndex Index of the last row that should be extracted (exclusive)
+   * @return The rows as a new Matrix
+   * @throws ArrayIndexOutOfBoundsException If an index does not point
+   *        to an existing row
+   */
+  public Matrix getRows(int fromIndex, int toIndex) {
+    if(fromIndex < 0 || fromIndex >= getHeight()
+            || toIndex < 0 || toIndex > getHeight()) {
+      throw new ArrayIndexOutOfBoundsException("Indices out of bounds!");
+    }
+    if(fromIndex >= toIndex) {
+      throw new IllegalArgumentException("Illegal index direction!");
     }
     
     
-    final Matrix result = new Matrix(getHeight() + 1, getWidth());
+    final Matrix result = new Matrix(toIndex - fromIndex, getWidth());
     
-    for(int j=0; j<getHeight(); j++) {
-      for(int i=0; i<getWidth(); i++) {
-        result.set(get(i, j), i, j);
+    for(int j=0; j<result.getHeight(); j++) {
+      for(int i=0; i<result.getWidth(); i++) {
+        result.set(j, i, get(fromIndex + j, i));
       }
-    }
-    
-    for(int i=0; i<getWidth(); i++) {
-      result.set(row[i], i, getHeight());
     }
     
     return result;
@@ -300,28 +401,29 @@ public class Matrix {
   
   /**
    * Appends a matrix to the bottom end of this matrix
-   * @param row Second matrix to append
-   * @return New matrix
-   * @throws IllegalArgumentException If the given nmatrix
-   *         is not as wide as this matrix
+   * @param rows Matrix to append
+   * @return Merged matrix
+   * @throws IllegalArgumentException If the givenn matrix
+   *        is not as wide as this matrix
    */
-  public Matrix appendRow(Matrix row) {
-    if(row.getWidth() != getWidth()) {
-      throw new IllegalArgumentException("Row not compatible!");
+  public Matrix appendRows(Matrix rows) {
+    if(rows.getWidth() != getWidth()) {
+      throw new IllegalArgumentException("Rows not compatible!");
     }
     
     
-    final Matrix result = new Matrix(getHeight() + row.getHeight(), getWidth());
+    final Matrix result =
+            new Matrix(getHeight() + rows.getHeight(), getWidth());
     
     for(int j=0; j<getHeight(); j++) {
-      for(int i=0; i<getWidth(); i++) {
-        result.set(get(i, j), i, j);
+      for(int i=0; i<result.getWidth(); i++) {
+        result.set(j, i, get(j, i));
       }
     }
     
-    for(int j=0; j<row.getHeight(); j++) {
-      for(int i=0; i<getWidth(); i++) {
-        result.set(row.get(i, j), i, getHeight()+j);
+    for(int j=0; j<rows.getHeight(); j++) {
+      for(int i=0; i<result.getWidth(); i++) {
+        result.set(getHeight() + j, i, rows.get(j, i));
       }
     }
     
@@ -329,33 +431,55 @@ public class Matrix {
   }
   
   /**
-   * Removes one row of this matrix
-   * @param index Index of the row to remove
-   * @return New matrix
+   * Removes a single row of this matrix
+   * @param index Index of the row that should be removed
+   * @return Resulting matrix
    * @throws ArrayIndexOutOfBoundsException If this matrix is to small to
-   *         remove a row or the index does not point to an existing row
+   *        remove a row or the index does not point to an existing row
    */
   public Matrix removeRow(int index) {
-    if(getHeight() <= 1) {
+    if(getHeight() < 2) {
       throw new ArrayIndexOutOfBoundsException("Matrix to small!");
     }
-    if(index < 0 || index > getHeight() - 1) {
+    if(index < 0 || index >= getHeight()) {
       throw new ArrayIndexOutOfBoundsException("Index out of bounds!");
     }
     
+    return removeRows(index, index + 1);
+  }
+  
+  /**
+   * Removes multiple rows of this matrix
+   * @param fromIndex Index of the first row that should be removed (inclusive)
+   * @param toIndex Index of the last row that should be removed (exclusive)
+   * @return Resulting matrix
+   * @throws ArrayIndexOutOfBoundsException If this matrix is to small to
+   *        remove the rows or an index does not point to an existing row
+   */
+  public Matrix removeRows(int fromIndex, int toIndex) {
+    if(getHeight() <= toIndex - fromIndex) {
+      throw new ArrayIndexOutOfBoundsException("Matrix to small!");
+    }
+    if(fromIndex < 0 || fromIndex >= getHeight()
+            || toIndex < 0 || toIndex > getHeight()) {
+      throw new ArrayIndexOutOfBoundsException("Indices out of bounds!");
+    }
+    if(fromIndex >= toIndex) {
+      throw new IllegalArgumentException("Illegal index direction!");
+    }
     
-    final Matrix result = new Matrix(getHeight() - 1, getWidth());
     
-    //First half
-    for(int j=0; j<index; j++) {
-      for(int i=0; i<getWidth(); i++) {
-        result.set(get(i, j), i, j);
+    final Matrix result =
+            new Matrix(getHeight() - (toIndex - fromIndex), getWidth());
+    
+    for(int j=0; j<fromIndex; j++) {
+      for(int i=0; i<result.getWidth(); i++) {
+        result.set(j, i, get(j, i));
       }
     }
-    //Second half
-    for(int j=index+1; j<getHeight(); j++) {
-      for(int i=0; i<getWidth(); i++) {
-        result.set(get(i, j), i, j-1);
+    for(int j=fromIndex; j<result.getHeight(); j++) {
+      for(int i=0; i<result.getWidth(); i++) {
+        result.set(j, i, get((toIndex - fromIndex) + j, i));
       }
     }
     
@@ -363,24 +487,46 @@ public class Matrix {
   }
   
   /**
-   * Appends a column to the right end of this matrix
-   * @param column Column to append
-   * @return New matrix
-   * @throws IllegalArgumentException If the column is not as high as the matrix
+   * Extracts a single column as a new Matrix
+   * @param index Index of the column that should be extracted
+   * @return The single column as a new Matrix
+   * @throws ArrayIndexOutOfBoundsException If the index does not point
+   *        to an existing column
    */
-  public Matrix appendColumn(double[] column) {
-    if(column.length != getHeight()) {
-      throw new IllegalArgumentException("Column not compatible!");
+  public Matrix getColumn(int index) {
+    if(index < 0 || index >= getHeight()) {
+      throw new ArrayIndexOutOfBoundsException("Index out of bounds!");
+    }
+    
+    return getColumns(index, index + 1);
+  }
+  
+  /**
+   * Extracts multiple columns as a new Matrix
+   * @param fromIndex Index of the first column
+   *        that should be extracted (inclusive)
+   * @param toIndex Index of the last column
+   *        that should be extracted (exclusive)
+   * @return The columns as a new Matrix
+   * @throws ArrayIndexOutOfBoundsException If an index does not point
+   *        to an existing column
+   */
+  public Matrix getColumns(int fromIndex, int toIndex) {
+    if(fromIndex < 0 || fromIndex >= getWidth()
+            || toIndex < 0 || toIndex > getWidth()) {
+      throw new ArrayIndexOutOfBoundsException("Indices out of bounds!");
+    }
+    if(fromIndex >= toIndex) {
+      throw new IllegalArgumentException("Illegal index direction!");
     }
     
     
-    final Matrix result = new Matrix(getHeight(), getWidth() + 1);
+    final Matrix result = new Matrix(getHeight(), toIndex - fromIndex);
     
-    for(int j=0; j<getHeight(); j++) {
-      for(int i=0; i<getWidth(); i++) {
-        result.set(get(i, j), i, j);
+    for(int j=0; j<result.getHeight(); j++) {
+      for(int i=0; i<result.getWidth(); i++) {
+        result.set(j, i, get(j, fromIndex + i));
       }
-      result.set(column[j], getWidth(), j);
     }
     
     return result;
@@ -388,26 +534,26 @@ public class Matrix {
   
   /**
    * Appends a matrix to the right end of this matrix
-   * @param column Second matrix to append
-   * @return New matrix
-   * @throws IllegalArgumentException If the given nmatrix
-   *         is not as high as this matrix
+   * @param columns Matrix to append
+   * @return Merged matrix
+   * @throws IllegalArgumentException If the given matrix
+   *        is not as high as this matrix
    */
-  public Matrix appendColumn(Matrix column) {
-    if(column.getHeight() != getHeight()) {
+  public Matrix appendColumns(Matrix columns) {
+    if(columns.getHeight() != getHeight()) {
       throw new IllegalArgumentException("Column not compatible!");
     }
     
     
     final Matrix result =
-            new Matrix(getHeight(), getWidth() + column.getWidth());
+            new Matrix(getHeight(), getWidth() + columns.getWidth());
     
-    for(int j=0; j<getHeight(); j++) {
+    for(int j=0; j<result.getHeight(); j++) {
       for(int i=0; i<getWidth(); i++) {
-        result.set(get(i, j), i, j);
+        result.set(j, i, get(j, i));
       }
-      for(int i=0; i<column.getWidth(); i++) {
-        result.set(column.get(i, j), getWidth()+i, j);
+      for(int i=0; i<columns.getWidth(); i++) {
+        result.set(j, getWidth() + i, columns.get(j, i));
       }
     }
     
@@ -415,31 +561,54 @@ public class Matrix {
   }
   
   /**
-   * Removes one column of this matrix
-   * @param index Index of the column to remove
-   * @return New matrix
+   * Removes a single column of this matrix
+   * @param index Index of the column that should be remove
+   * @return Resulting matrix
    * @throws ArrayIndexOutOfBoundsException If this matrix is to small to
-   *         remove a column or the index does not point to an existing column
+   *        remove a column or the index does not point to an existing column
    */
   public Matrix removeColumn(int index) {
-    if(getWidth() <= 1) {
+    if(getWidth() < 2) {
       throw new ArrayIndexOutOfBoundsException("Matrix to small!");
     }
-    if(index < 0 || index > getWidth() - 1) {
+    if(index < 0 || index >= getWidth()) {
       throw new ArrayIndexOutOfBoundsException("Index out of bounds!");
     }
     
+    return removeColumns(index, index + 1);
+  }
+  
+  /**
+   * Removes multiple columns of this matrix
+   * @param fromIndex Index of the first column
+   *        that should be removed (inclusive)
+   * @param toIndex Index of the last column that should be removed (exclusive)
+   * @return Resulting matrix
+   * @throws ArrayIndexOutOfBoundsException If this matrix is to small to
+   *        remove the columns or an index does not point to an existing column
+   */
+  public Matrix removeColumns(int fromIndex, int toIndex) {
+    if(getWidth() <= toIndex - fromIndex) {
+      throw new ArrayIndexOutOfBoundsException("Matrix to small!");
+    }
+    if(fromIndex < 0 || fromIndex >= getWidth()
+            || toIndex < 0 || toIndex > getWidth()) {
+      throw new ArrayIndexOutOfBoundsException("Indices out of bounds!");
+    }
+    if(fromIndex >= toIndex) {
+      throw new IllegalArgumentException("Illegal index direction!");
+    }
     
-    final Matrix result = new Matrix(getHeight(), getWidth() - 1);
     
-    for(int j=0; j<getHeight(); j++) {
-      //First half
-      for(int i=0; i<index; i++) {
-        result.set(get(i, j), i, j);
+    final Matrix result =
+            new Matrix(getHeight(), getWidth() - (toIndex - fromIndex));
+    
+    for(int j=0; j<result.getHeight(); j++) {
+      for(int i=0; i<fromIndex; i++) {
+        result.set(j, i, get(j, i));
       }
-      //Second half
-      for(int i=index+1; i<getWidth(); i++) {
-        result.set(get(i, j), i-1, j);
+      for(int i=fromIndex; i<result.getWidth(); i++) {
+        result.set(j, i, get(j, (toIndex - fromIndex) + i));
       }
     }
     
@@ -448,53 +617,26 @@ public class Matrix {
   
   
   /**
-   * Fills the matrix with random double values
+   * Fills the matrix with random values
    */
   public void rand() {
     rand(new Random(), -Double.MAX_VALUE, Double.MAX_VALUE);
   }
   
   /**
-   * Fills the matrix with random double values, based on a seed
-   * @param seed Seed for the random number generator
-   */
-  public void rand(long seed) {
-    rand(new Random(seed), -Double.MAX_VALUE, Double.MAX_VALUE);
-  }
-  
-  /**
-   * Fills the matrix with random double values between the two given values
-   * @param minimum Minimum value
-   * @param maximum Maximum value
-   */
-  public void rand(double minimum, double maximum) {
-    rand(new Random(), minimum, maximum);
-  }
-  
-  /**
-   * Fills the matrix with random double values, based on a seed,
-   * between the two given values
-   * @param seed Seed for the random number generator
-   * @param minimum Minimum value
-   * @param maximum Maximum value
-   */
-  public void rand(long seed, double minimum, double maximum) {
-    rand(new Random(seed), minimum, maximum);
-  }
-  
-  /**
-   * Fills the matrix with random double values, between the two given values,
-   * from the given random numbers generator
+   * Fills the matrix with random values,
+   * from minimum (inclusive) to maximum (exclusive),
+   * given by the random number generator
    * @param rand Random number generator
-   * @param minimum Minimum value
-   * @param maximum Maximum value
+   * @param minimum Minimum value (inclusive)
+   * @param maximum Maximum value (exclusive)
    */
   public void rand(Random rand, double minimum, double maximum) {
     final double range = maximum - minimum;
     
     for(int j=0; j<getHeight(); j++) {
       for(int i=0; i<getWidth(); i++) {
-        set(range*rand.nextDouble() + minimum, i, j);
+        set(j, i, range*rand.nextDouble() + minimum);
       }
     }
   }
@@ -508,9 +650,9 @@ public class Matrix {
   public double[][] toArray() {
     final double[][] array = new double[getHeight()][getWidth()];
     
-    for(int j=0; j<getHeight(); j++) {
-      for(int i=0; i<getWidth(); i++) {
-        array[j][i] = get(i, j);
+    for(int j=0; j<array.length; j++) {
+      for(int i=0; i<array[j].length; i++) {
+        array[j][i] = get(j, i);
       }
     }
     
@@ -522,17 +664,15 @@ public class Matrix {
   public String toString() {
     final StringBuilder builder = new StringBuilder("[[").append(get(0, 0));
     
-    //First row
     for(int i=1; i<getWidth(); i++) {
-      builder.append(", ").append(get(i, 0));
+      builder.append(", ").append(get(0, i));
     }
     builder.append("]");
     
-    //Rest
     for(int j=1; j<getHeight(); j++) {
-      builder.append("\n [").append(get(0, j));
+      builder.append("\n [").append(get(j, 0));
       for(int i=1; i<getWidth(); i++) {
-        builder.append(", ").append(get(i, j));
+        builder.append(", ").append(get(j, i));
       }
       builder.append("]");
     }
@@ -547,10 +687,9 @@ public class Matrix {
   
   public static void main(String[] args) {
     double scalar = 2;
-    double[] array = new double[]{1, 3, 9};
     Matrix matrix1 = new Matrix(new double[][] {
       {1, 2, 3},
-      {4, 5, 6},
+      {4, 42, 6},
       {7, 8, 9}});
     Matrix matrix2 = new Matrix(new double[][] {
       {1, 4, 7},
@@ -558,10 +697,9 @@ public class Matrix {
       {3, 6, 9}});
     
     
+    
     System.out.println("Scalar:");
     System.out.println(scalar + "\n");
-    System.out.println("Array:");
-    System.out.println(Arrays.toString(array) + "\n");
     System.out.println("Matrix1:");
     System.out.println(matrix1 + "\n");
     System.out.println("Matrix2:");
@@ -569,30 +707,61 @@ public class Matrix {
     System.out.println();
     
     
-    System.out.println("Addition:");
+    System.out.println("Set [1, 1] to 5:");
+    matrix1.set(1, 1, 5);
+    System.out.println(matrix1 + "\n");
+    System.out.println("Get [1, 1]:" + matrix1.get(1, 1));
+    System.out.println("Height: " + matrix1.getHeight());
+    System.out.println("Width: " + matrix1.getWidth() + "\n\n");
+    
+    
+    System.out.println("Addition (Matrix1 & Matrix2):");
     System.out.println(matrix1.add(matrix2) + "\n");
-    System.out.println("Subtraction:");
-    System.out.println(matrix1.add(matrix2) + "\n");
-    System.out.println("Scalation:");
-    System.out.println(matrix1.multiply(scalar) + "\n");
-    System.out.println("Elementwise multiplication:");
-    System.out.println(matrix1.multiplyElementwise(matrix2) + "\n");
+    System.out.println("Subtraction (Matrix1 & Matrix2):");
+    System.out.println(matrix1.subtract(matrix2) + "\n");
     System.out.println("Matrix multiplication:");
     System.out.println(matrix1.multiply(matrix2) + "\n");
-    System.out.println("Transposition:");
-    System.out.println(matrix1.transpose() + "\n");
+    System.out.println("Elementwise multiplication:");
+    System.out.println(matrix1.multiplyElementwise(matrix2) + "\n");
+    System.out.println("Scalar multiplication:");
+    System.out.println(matrix1.multiply(scalar) + "\n");
+    System.out.println("Elementwise division:");
+    System.out.println(matrix1.divideElementwise(matrix2) + "\n");
     
-    System.out.println("Appending row:");
-    System.out.println(matrix1.appendRow(array) + "\n");
-    System.out.println("Appending row:");
-    System.out.println(matrix1.appendRow(matrix2) + "\n");
-    System.out.println("Removing row:");
+    
+    System.out.println("Applying sine:");
+    System.out.println(matrix1.apply(x -> Math.sin(x)) + "\n\n");
+    
+    
+    System.out.println("Transpose:");
+    System.out.println(matrix1.transpose() + "\n\n");
+    
+    
+    System.out.println("Get row 1:");
+    System.out.println(matrix1.getRow(1) + "\n");
+    System.out.println("Get rows 1 & 2:");
+    System.out.println(matrix1.getRows(1, 3) + "\n");
+    System.out.println("Append rows:");
+    System.out.println(matrix1.appendRows(matrix2) + "\n");
+    System.out.println("Remove row 1:");
     System.out.println(matrix1.removeRow(1) + "\n");
-    System.out.println("Appending column:");
-    System.out.println(matrix1.appendColumn(array) + "\n");
-    System.out.println("Appending column:");
-    System.out.println(matrix1.appendColumn(matrix2) + "\n");
-    System.out.println("Remove column:");
+    System.out.println("Remove rows 0 & 1:");
+    System.out.println(matrix1.removeRows(0, 2) + "\n\n");
+    
+    System.out.println("Get column 1:");
+    System.out.println(matrix1.getColumn(1) + "\n");
+    System.out.println("Get columns 1 & 2:");
+    System.out.println(matrix1.getColumns(1, 3) + "\n");
+    System.out.println("Append columns:");
+    System.out.println(matrix1.appendColumns(matrix2) + "\n");
+    System.out.println("Remove column 1:");
     System.out.println(matrix1.removeColumn(1) + "\n");
+    System.out.println("Remove columns 0 & 1:");
+    System.out.println(matrix1.removeColumns(0, 2) + "\n");
+    
+    
+    System.out.println("Randomize within [-1, 1[:");
+    matrix1.rand(new Random(), -1, 1);
+    System.out.println(matrix1 + "\n");
   }
 }
