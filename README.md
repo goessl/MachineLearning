@@ -1,4 +1,6 @@
 # Machine Learning
+# Deprecated
+**This repository is deprecated! Please use [NeuralNetwork](https://github.com/sebig3000/NeuralNetwork) instead!**
 
 Java collection that provides Java packages for developing machine learning algorithms and that is
 - easy to use -> great for small projects or just to learn how machine learning works
